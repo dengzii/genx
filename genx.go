@@ -6,15 +6,8 @@ import (
 	"go/parser"
 	"go/token"
 	"golang.org/x/tools/go/packages"
-	"io/fs"
 	"log"
 )
-
-type AstFile struct {
-	pkg      *ast.Package
-	file     *ast.File
-	typeName string
-}
 
 type typeInfo struct {
 	name string
@@ -50,37 +43,84 @@ func (a *apiHandler) verify() bool {
 	return true
 }
 
-func main() {
-	pkgName := ""
-	fnName := ""
+type genx struct {
+	path string
+}
+
+func (g *genx) resolve(dir string) {
 	pkgConfig := &packages.Config{
 		Mode: packages.NeedImports |
 			packages.NeedName |
 			packages.NeedFiles |
 			packages.NeedDeps |
+			packages.NeedModule |
 			packages.NeedSyntax,
-		Dir: "testdata",
+		Dir: dir,
 	}
 
 	pkgs, err := packages.Load(pkgConfig, "")
 	if err != nil {
 		log.Fatal(err)
 	}
+	for _, p := range pkgs {
+		g.resolvePkg(p)
+	}
+}
 
-	for _, pkg := range pkgs {
-		fmt.Println(pkg.PkgPath)
-		for _, f := range pkg.GoFiles {
-			fmt.Println(f)
-			set := token.NewFileSet()
-			_, err := parser.ParseDir(set, "", func(info fs.FileInfo) bool {
-				return true
-			}, parser.ParseComments)
-			if err != nil {
-				log.Fatal(err)
+func (g *genx) resolvePkg(pkg *packages.Package) {
+	for _, f := range pkg.GoFiles {
+
+		set := token.NewFileSet()
+		astFile, err := parser.ParseFile(set, f, nil, parser.ParseComments)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fns := g.findFunc(astFile, commentMatcher)
+		for _, fn := range fns {
+			fmt.Println(fn.Name)
+
+			for _, field := range fn.Type.Params.List {
+				g.resolveType(field.Type)
+				fmt.Println("paramType:", field.Type)
+			}
+
+			for _, field := range fn.Type.Results.List {
+				fmt.Println("resultType:", field.Type)
 			}
 
 		}
 	}
+}
 
-	fmt.Println(pkgName, fnName)
+func (g *genx) findFunc(file *ast.File, matcher FuncMatcher) []*ast.FuncDecl {
+
+	var ret []*ast.FuncDecl
+
+	for _, decl := range file.Decls {
+		if fn, ok := decl.(*ast.FuncDecl); ok {
+			if matcher.Match(fn) {
+				ret = append(ret, fn)
+				break
+			}
+		}
+	}
+
+	return ret
+}
+
+func (g *genx) resolveType(expr ast.Expr) *typeInfo {
+	info := &typeInfo{
+		name: "",
+		ptr:  false,
+		pkg:  nil,
+	}
+
+	return info
+}
+
+func main() {
+	g := &genx{}
+
+	g.resolve("testdata/handler")
 }
