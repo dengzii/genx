@@ -1,13 +1,18 @@
 package handler
 
 import (
-	"genx/testdata/gin"
 	"genx/testdata/param"
+	"github.com/gin-gonic/gin"
 )
 
-//go:generate genx api
-//genx:api
-func LoginHandler(ctx *gin.Context, request *param.LoginRequest, response *param.LoginResponse) error {
+//go:generate genx api post /login
+func LoginHandler(ctx *gin.Context, request *param.LoginRequest) (*param.LoginResponse, error) {
+	// ...
+	return &param.LoginResponse{Token: "token"}, nil
+}
 
-	return nil
+//go:generate genx api get /messages
+func GetMessageHandler(ctx *gin.Context) ([]*param.Message, error) {
+	// ...
+	return []*param.Message{}, nil
 }

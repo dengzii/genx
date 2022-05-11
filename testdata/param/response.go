@@ -8,3 +8,7 @@ type LoginRequest struct {
 	Name     string
 	Password string
 }
+
+type Message struct {
+	Content string
+}
