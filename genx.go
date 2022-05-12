@@ -5,6 +5,8 @@ import (
 	"go/token"
 	"golang.org/x/tools/go/packages"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -26,34 +28,40 @@ func resolvePkg(pkg *packages.Package) {
 		if ignore {
 			continue
 		}
-
-		set := token.NewFileSet()
-		astFile, err := parser.ParseFile(set, f, nil, parser.ParseComments)
-		if err != nil {
-			log.Fatal(err)
+		handlers := resolveFile(f, pkg)
+		if len(handlers) == 0 {
+			continue
 		}
-
-		gf := NewGoFile(pkg, astFile, f)
-
-		funcs := resolveHandlerFunc(gf, commentMatcher)
-
-		handlers := make([]*ApiHandler, 0, len(funcs))
-
-		for _, fn := range funcs {
-			if len(fn.errors) > 0 {
-				log.Println(fn.errors)
-				continue
-			}
-			handler, err := NewApiHandler(fn)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			handlers = append(handlers, handler)
-		}
-		NewGenerator(gf, handlers).Generate()
-
+		NewGenerator(handlers).Generate()
 	}
+}
+
+func resolveFile(path string, pkg *packages.Package) []*ApiHandler {
+
+	set := token.NewFileSet()
+	astFile, err := parser.ParseFile(set, path, nil, parser.ParseComments)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	gf := NewGoFile(pkg, astFile, path)
+	funcs := resolveHandlerFunc(gf, commentMatcher)
+	handlers := make([]*ApiHandler, 0, len(funcs))
+
+	for _, fn := range funcs {
+		if len(fn.errors) > 0 {
+			log.Println(fn.errors)
+			continue
+		}
+		handler, err := NewApiHandler(fn)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		handlers = append(handlers, handler)
+	}
+
+	return handlers
 }
 
 func resolveHandlerFunc(gf *GoFile, matcher FuncMatcher) []*GoFunc {
@@ -72,7 +80,11 @@ func resolveHandlerFunc(gf *GoFile, matcher FuncMatcher) []*GoFunc {
 }
 
 func main() {
-	dir := "testdata/handler"
+
+	dir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	pkgConfig := &packages.Config{
 		Mode: packages.NeedImports |

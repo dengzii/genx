@@ -12,11 +12,13 @@ type ApiHandler struct {
 	err           *GoField
 
 	*GoFunc
+	gf *GoFile
 }
 
 func NewApiHandler(fn *GoFunc) (*ApiHandler, error) {
 	ret := &ApiHandler{
 		GoFunc: fn,
+		gf:     fn.gf,
 	}
 
 	for _, goField := range fn.getParamList() {

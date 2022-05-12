@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"genx/testdata/param"
+	"github.com/dengzii/genx/testdata/param"
 	"github.com/gin-gonic/gin"
 )
 

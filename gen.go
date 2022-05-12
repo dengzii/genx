@@ -21,9 +21,9 @@ type Generator struct {
 	buf bytes.Buffer
 }
 
-func NewGenerator(gf *GoFile, handlers []*ApiHandler) *Generator {
+func NewGenerator(handlers []*ApiHandler) *Generator {
 	generator := Generator{
-		gf:       gf,
+		gf:       handlers[0].gf,
 		handlers: handlers,
 	}
 	return &generator
