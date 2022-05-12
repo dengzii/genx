@@ -14,7 +14,7 @@ var commentMatcher FuncMatcher = func(fnDecl *ast.FuncDecl) bool {
 		return false
 	}
 	for _, comment := range fnDecl.Doc.List {
-		if strings.HasPrefix(comment.Text, "//go:generate genx api") {
+		if strings.HasPrefix(comment.Text, "//go:generate genx handler") {
 			if fnDecl.Recv != nil {
 				return false
 			}
@@ -29,6 +29,7 @@ type GoFile struct {
 	Pkg     *packages.Package
 	Imports map[string]string
 	Path    string
+	Name    string
 	AstFile *ast.File
 }
 
@@ -38,6 +39,12 @@ func NewGoFile(pkg *packages.Package, astFile *ast.File, path string) *GoFile {
 		AstFile: astFile,
 		Path:    path,
 	}
+	left := strings.LastIndex(path, string(os.PathSeparator))
+	if left != -1 {
+		file.Name = path[left+1:]
+	}
+	file.Name = file.Name[:len(file.Name)-len(".go")]
+
 	file.parseImportsName()
 	return &file
 }
@@ -48,10 +55,6 @@ func (g *GoFile) GetDir() string {
 		return ""
 	}
 	return g.Path[:index]
-}
-
-func (g *GoFile) Name() string {
-	return g.AstFile.Name.Name
 }
 
 func (g *GoFile) GetImportPkgByName(pkgName string) *packages.Package {

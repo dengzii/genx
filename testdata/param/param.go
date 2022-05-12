@@ -12,3 +12,7 @@ type LoginRequest struct {
 type Message struct {
 	Content string
 }
+
+type TestRequest struct {
+	Name string
+}

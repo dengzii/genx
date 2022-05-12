@@ -6,9 +6,9 @@ type GoFunc struct {
 	gf      *GoFile
 	astFunc *ast.FuncDecl
 
-	receiver *GoType
-	param    []*GoType
-	results  []*GoType
+	receiver *GoField
+	param    []*GoField
+	results  []*GoField
 
 	errors []error
 }
@@ -24,7 +24,7 @@ func (g *GoFunc) verify() bool {
 	return true
 }
 
-func (g *GoFunc) GetName() string {
+func (g *GoFunc) Name() string {
 	return g.astFunc.Name.Name
 }
 
@@ -34,8 +34,8 @@ func (g *GoFunc) ResolveTypeInfo() {
 	g.getParamList()
 }
 
-func (g *GoFunc) getParamList() []*GoType {
-	if len(g.param) == 0 {
+func (g *GoFunc) getParamList() []*GoField {
+	if len(g.param) != 0 {
 		return g.param
 	}
 	if g.astFunc.Type.Params != nil {
@@ -44,8 +44,8 @@ func (g *GoFunc) getParamList() []*GoType {
 	return g.param
 }
 
-func (g *GoFunc) getResultList() []*GoType {
-	if len(g.results) == 0 {
+func (g *GoFunc) getResultList() []*GoField {
+	if len(g.results) != 0 {
 		return g.results
 	}
 	if g.astFunc.Type.Results != nil {
@@ -54,7 +54,7 @@ func (g *GoFunc) getResultList() []*GoType {
 	return g.results
 }
 
-func (g *GoFunc) getReceiver() *GoType {
+func (g *GoFunc) getReceiver() *GoField {
 	if g.receiver != nil {
 		return g.receiver
 	}
@@ -65,9 +65,9 @@ func (g *GoFunc) getReceiver() *GoType {
 	return g.receiver
 }
 
-func (g *GoFunc) getTypeInfo(fields *ast.FieldList) []*GoType {
+func (g *GoFunc) getTypeInfo(fields *ast.FieldList) []*GoField {
 
-	var ret []*GoType
+	var ret []*GoField
 
 	for _, field := range fields.List {
 
@@ -82,4 +82,21 @@ func (g *GoFunc) getTypeInfo(fields *ast.FieldList) []*GoType {
 		ret = append(ret, goType)
 	}
 	return ret
+}
+
+func (g *GoFunc) getDepImports(pkgs map[string]string) {
+
+	for _, goType := range g.getParamList() {
+		if goType.pkgPath == "" {
+			continue
+		}
+		pkgs[goType.pkgPath] = goType.pkgName
+	}
+
+	for _, goType := range g.getResultList() {
+		if goType.pkgPath == "" {
+			continue
+		}
+		pkgs[goType.pkgPath] = goType.pkgName
+	}
 }

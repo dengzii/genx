@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"go/ast"
+	"strings"
 )
 
-type GoType struct {
-	name string
+type GoField struct {
+	typeName string
+	name     string
 
 	isMap       bool
 	isSlice     bool
@@ -19,14 +21,14 @@ type GoType struct {
 	err error
 }
 
-func NewGoType(expr ast.Expr) *GoType {
-	return resolveType(expr, &GoType{})
+func NewGoType(expr ast.Expr) *GoField {
+	return resolveType(expr, &GoField{})
 }
 
-func (t *GoType) resolvePkgInfo(imports map[string]string, defaultPkg string) {
+func (t *GoField) resolvePkgInfo(imports map[string]string, defaultPkg string) {
 
 	if pkgPath, ok := imports[t.pkgName]; ok {
-		t.pkgPath = pkgPath
+		t.pkgPath = strings.Trim(pkgPath, "\"")
 	} else {
 		if t.pkgName == "" {
 			t.pkgName = defaultPkg
@@ -36,11 +38,11 @@ func (t *GoType) resolvePkgInfo(imports map[string]string, defaultPkg string) {
 	}
 }
 
-func (t *GoType) String() string {
-	return fmt.Sprintf("{%s %s}", t.pkgName, t.name)
+func (t *GoField) String() string {
+	return fmt.Sprintf("{%s %s}", t.pkgName, t.typeName)
 }
 
-func resolveType(expr ast.Expr, info *GoType) *GoType {
+func resolveType(expr ast.Expr, info *GoField) *GoField {
 
 	switch expr.(type) {
 
@@ -61,7 +63,7 @@ func resolveType(expr ast.Expr, info *GoType) *GoType {
 
 	case *ast.Ident:
 		exp := expr.(*ast.Ident)
-		info.name = exp.Name
+		info.typeName = exp.Name
 
 	case *ast.StructType:
 		fmt.Println("ArrayType")
@@ -76,7 +78,7 @@ func resolveType(expr ast.Expr, info *GoType) *GoType {
 		info.isMap = true
 
 	case *ast.InterfaceType:
-		info.name = "interface{}"
+		info.typeName = "interface{}"
 
 	default:
 		info.err = fmt.Errorf("unknown type %T", expr)

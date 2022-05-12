@@ -5,14 +5,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//go:generate genx api post /login
+//go:generate genx handler
 func LoginHandler(ctx *gin.Context, request *param.LoginRequest) (*param.LoginResponse, error) {
 	// ...
 	return &param.LoginResponse{Token: "token"}, nil
 }
 
-//go:generate genx api get /messages
+//go:generate genx handler
 func GetMessageHandler(ctx *gin.Context) ([]*param.Message, error) {
+	// ...
+	return []*param.Message{}, nil
+}
+
+//go:generate genx handler
+func GetMessageHandler2(request *param.TestRequest) ([]*param.Message, error) {
 	// ...
 	return []*param.Message{}, nil
 }
