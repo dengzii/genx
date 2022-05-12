@@ -5,7 +5,7 @@ import (
 	"go/ast"
 )
 
-type typeInfo struct {
+type GoType struct {
 	name string
 
 	isMap       bool
@@ -19,7 +19,11 @@ type typeInfo struct {
 	err error
 }
 
-func (t *typeInfo) resolvePkgInfo(imports map[string]string, defaultPkg string) {
+func NewGoType(expr ast.Expr) *GoType {
+	return resolveType(expr, &GoType{})
+}
+
+func (t *GoType) resolvePkgInfo(imports map[string]string, defaultPkg string) {
 
 	if pkgPath, ok := imports[t.pkgName]; ok {
 		t.pkgPath = pkgPath
@@ -32,37 +36,28 @@ func (t *typeInfo) resolvePkgInfo(imports map[string]string, defaultPkg string) 
 	}
 }
 
-func (t *typeInfo) String() string {
+func (t *GoType) String() string {
 	return fmt.Sprintf("{%s %s}", t.pkgName, t.name)
 }
 
-type typeResolver struct {
-}
-
-func (t *typeResolver) resolve(expr ast.Expr) *typeInfo {
-	info := &typeInfo{}
-	t.resolveType(expr, info)
-	return info
-}
-
-func (t *typeResolver) resolveType(expr ast.Expr, info *typeInfo) *typeInfo {
+func resolveType(expr ast.Expr, info *GoType) *GoType {
 
 	switch expr.(type) {
 
 	case *ast.ArrayType:
 		exp := expr.(*ast.ArrayType)
 		info.isSlice = true
-		t.resolveType(exp.Elt, info)
+		resolveType(exp.Elt, info)
 
 	case *ast.StarExpr:
 		info.ptr = true
 		exp := expr.(*ast.StarExpr)
-		t.resolveType(exp.X, info)
+		resolveType(exp.X, info)
 
 	case *ast.SelectorExpr:
 		exp := expr.(*ast.SelectorExpr)
 		info.pkgName = exp.X.(*ast.Ident).Name
-		t.resolveType(exp.Sel, info)
+		resolveType(exp.Sel, info)
 
 	case *ast.Ident:
 		exp := expr.(*ast.Ident)
