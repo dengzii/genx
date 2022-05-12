@@ -1,4 +1,4 @@
-module genx
+module github.com/dengzii/genx
 
 go 1.18
 
