@@ -85,9 +85,18 @@ func (g *Generator) genHandler(h *ApiHandler) {
 
 	// invoke handler
 	if h.responseParam != nil {
-		g.printf("\tresp, ")
+		g.printf("\tresp ")
 	}
-	g.printf("err := %s(", h.Name())
+	if h.err != nil {
+		if h.responseParam != nil {
+			g.printf(", ")
+		}
+		g.printf("err ")
+	}
+	if h.requestParam != nil || h.err != nil {
+		g.printf(":= ")
+	}
+	g.printf("%s(", h.Name())
 	if h.context != nil {
 		g.printf("ctx, ")
 	}
@@ -96,15 +105,19 @@ func (g *Generator) genHandler(h *ApiHandler) {
 	}
 	g.printf(")\n")
 
-	// handle error
-	g.printf("\tif err != nil {\n")
-	g.printf("\t\tctx.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})\n")
-	g.printf("\t\treturn\n")
-	g.printf("\t}\n")
+	if h.err != nil {
+		// handle error
+		g.printf("\tif err != nil && !ctx.IsAborted() {\n")
+		g.printf("\t\tctx.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})\n")
+		g.printf("\t\treturn\n")
+		g.printf("\t}\n")
+	}
 
 	// return response
 	if h.responseParam != nil {
-		g.printf("\tctx.JSON(http.StatusOK, resp)\n")
+		g.printf("\tif !ctx.IsAborted() {\n")
+		g.printf("\t\tctx.JSON(http.StatusOK, resp)\n")
+		g.printf("\t}\n")
 	}
 
 	g.printf("}\n")
