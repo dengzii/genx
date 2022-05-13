@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import "github.com/dengzii/genx/testdata/gin"
 
 type InfoController struct {
 }

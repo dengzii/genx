@@ -1,8 +1,8 @@
 package handler
 
 import (
+	"github.com/dengzii/genx/testdata/gin"
 	"github.com/dengzii/genx/testdata/param"
-	"github.com/gin-gonic/gin"
 )
 
 //go:generate genx handler
