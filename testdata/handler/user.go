@@ -12,9 +12,9 @@ func LoginHandler(ctx *gin.Context, request *param.LoginRequest) (*param.LoginRe
 }
 
 //go:generate genx handler
-func GetMessageHandler(ctx *gin.Context) ([]*param.Message, error) {
+func GetMessageHandler(ctx *gin.Context) {
 	// ...
-	return []*param.Message{}, nil
+
 }
 
 //go:generate genx handler

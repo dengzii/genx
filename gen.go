@@ -96,9 +96,19 @@ func (g *Generator) genHandler(h *ApiHandler) {
 	}
 	g.printf(")\n")
 
-	// handle error
-	g.printf("\tif err != nil {\n")
-	g.printf("\t\tctx.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})\n")
+	g.printf("\tif ctx.IsAborted() {\n")
+	g.printf("\t\treturn\n")
+	g.printf("\t}\n")
+
+	if h.err != nil {
+		// handle error
+		g.printf("\tif err != nil {\n")
+		g.printf("\t\tctx.JSON(http.StatusBadRequest, gin.H{\"error\": err.Error()})\n")
+		g.printf("\t\treturn\n")
+		g.printf("\t}\n")
+	}
+
+	g.printf("\tif ctx.IsAborted() {\n")
 	g.printf("\t\treturn\n")
 	g.printf("\t}\n")
 
