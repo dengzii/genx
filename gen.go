@@ -93,7 +93,7 @@ func (g *Generator) genHandler(h *ApiHandler) {
 		}
 		g.printf("err ")
 	}
-	if h.requestParam != nil || h.err != nil {
+	if h.responseParam != nil || h.err != nil {
 		g.printf(":= ")
 	}
 	g.printf("%s(", h.Name())
