@@ -19,7 +19,7 @@
 ### 安装
 
 ```shell
-go install github.com/genx/genx
+go install github.com/dengzii/genx
 ```
 
 ### 定义处理函数
